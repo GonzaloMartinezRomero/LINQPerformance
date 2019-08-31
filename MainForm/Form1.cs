@@ -38,7 +38,8 @@ namespace MainForm
         private void ShowLoadInformation(int threadID, ulong dataLoaded)
         {
             lock (lockObject)
-            {               
+            {
+                Console.WriteLine();
                 threadInformationDataLoaded[threadID] = dataLoaded;
                 StringBuilder textInformation = new StringBuilder();
 
@@ -50,11 +51,10 @@ namespace MainForm
             }
         }
 
-        /*
-            Al hacer uso del async genera un hilo hijo que permite que el main thread no quede bloqueado 
-        */
         private async void LoadDataAsync(object sender, EventArgs e)
         {
+            TextStatusProgress.Clear();
+
             try
             {
                 CheckInputParameters();
@@ -63,6 +63,7 @@ namespace MainForm
 
                 await Task.Run(() => { linqPerformanceManager.LoadData(elementsForLoad); });
                 TextStatusProgress.Text += Environment.NewLine + "All items loaded!!";
+                TextStatusProgress.Update();
 
                 ButtonNoParaAsyn.Enabled = true;
                 ButtonParalellAsyn.Enabled = true;
@@ -96,7 +97,7 @@ namespace MainForm
             List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqNoAsParallelAsync();
             watch.Stop();
 
-            textNoParalellAsyn.Text = processedItems.Count +" items processed in "+ watch.ElapsedMilliseconds.ToString() +"ms";
+            textNoParalellAsyn.Text = elementsForLoad +" items processed in "+ watch.ElapsedMilliseconds.ToString() +"ms";
 
             ButtonNoParaAsyn.Enabled = true;
         }
@@ -109,7 +110,7 @@ namespace MainForm
             List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqAsParallelAsync();
             watch.Stop();
 
-            textParallelAsym.Text = processedItems.Count + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
+            textParallelAsym.Text = elementsForLoad + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
 
             ButtonParalellAsyn.Enabled = true;
         }

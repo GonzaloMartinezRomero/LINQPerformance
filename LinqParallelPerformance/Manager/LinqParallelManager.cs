@@ -12,7 +12,6 @@ namespace LinqParallelPerformance.Manager
     public class LinqParallelManager
     {
         public const uint MAX_THREAD_POOL = 4;
-        public const ulong REFRESH_CUANTITY_NUMBER = 200;
 
         private List<DefaultModel> collectionObjects = new List<DefaultModel>();
 
@@ -36,20 +35,23 @@ namespace LinqParallelPerformance.Manager
 
             List<Task> taskList = new List<Task>();
             ulong batchSize = dataSize / MAX_THREAD_POOL;
+
+            ulong ratioFrecuency = batchSize / 10;
+            ulong refreshFrecuency = (ratioFrecuency >= 1) ? ratioFrecuency : 1;
          
             for (int i = 1; i <= MAX_THREAD_POOL; ++i)
             {
                 taskList.Add(Task.Factory.StartNew(() =>
                 {
-                    ulong callNumber = REFRESH_CUANTITY_NUMBER;
+                    ulong currentAmountItems = refreshFrecuency;
                     int threadID = ThreadUtilities.GetThreadIdentificator();
 
-                    for (ulong indexItem = 1; indexItem <= batchSize; ++indexItem)
+                    for (ulong currentItem = 1; currentItem <= batchSize; ++currentItem)
                     {
-                        if (indexItem == callNumber)
+                        if (currentItem == currentAmountItems)
                         {
-                            OnStatusProgress?.Invoke(threadID, indexItem);
-                            callNumber += REFRESH_CUANTITY_NUMBER;
+                            OnStatusProgress?.Invoke(threadID, currentItem);
+                            currentAmountItems += refreshFrecuency;
                         }
                         concurrentListCollectionObject.Add(GenerateRandomDefaultModel());
                     }
