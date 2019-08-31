@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2037
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainForm", "MainForm\MainForm.csproj", "{551E7CF8-E3CC-4466-8255-B50059DC02A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqParallelPerformance", "LinqParallelPerformance\LinqParallelPerformance.csproj", "{0BFD04F2-BDBF-4EAF-9841-4C33861FC9C7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{551E7CF8-E3CC-4466-8255-B50059DC02A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{551E7CF8-E3CC-4466-8255-B50059DC02A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{551E7CF8-E3CC-4466-8255-B50059DC02A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{551E7CF8-E3CC-4466-8255-B50059DC02A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BFD04F2-BDBF-4EAF-9841-4C33861FC9C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BFD04F2-BDBF-4EAF-9841-4C33861FC9C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BFD04F2-BDBF-4EAF-9841-4C33861FC9C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BFD04F2-BDBF-4EAF-9841-4C33861FC9C7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {13028B83-49E0-4231-980D-4A7245F85F19}
+	EndGlobalSection
+EndGlobal
