@@ -31,7 +31,8 @@ namespace LinqParallelPerformance.Manager
 
         public void LoadData(ulong dataSize)
         {
-            ConcurrentBag<DefaultModel> concurrentListCollectionObject = new ConcurrentBag<DefaultModel>();           
+            ConcurrentBag<DefaultModel> concurrentListCollectionObject = new ConcurrentBag<DefaultModel>();
+            ThreadUtilities threadUtilities = new ThreadUtilities();
 
             List<Task> taskList = new List<Task>();
             ulong batchSize = dataSize / MAX_THREAD_POOL;
@@ -44,7 +45,7 @@ namespace LinqParallelPerformance.Manager
                 taskList.Add(Task.Factory.StartNew(() =>
                 {
                     ulong currentAmountItems = refreshFrecuency;
-                    int threadID = ThreadUtilities.GetThreadIdentificator();
+                    int threadID = threadUtilities.GetThreadIdentificator();
 
                     for (ulong currentItem = 1; currentItem <= batchSize; ++currentItem)
                     {

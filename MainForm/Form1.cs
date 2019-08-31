@@ -59,14 +59,14 @@ namespace MainForm
             {
                 CheckInputParameters();
 
-                LoadDataAsyn.Enabled = false;
+                LoadDataButton.Enabled = false;
 
                 await Task.Run(() => { linqPerformanceManager.LoadData(elementsForLoad); });
                 TextStatusProgress.Text += Environment.NewLine + "All items loaded!!";
                 TextStatusProgress.Update();
 
-                ButtonNoParaAsyn.Enabled = true;
-                ButtonParalellAsyn.Enabled = true;
+                ButtonNoParallelLinq.Enabled = true;
+                ButtonParalellLinq.Enabled = true;
             }
             catch (Exception exception)
             {
@@ -91,7 +91,7 @@ namespace MainForm
 
         private async void ButtonNoParaAsyn_Click(object sender, EventArgs e)
         {
-            ButtonNoParaAsyn.Enabled = false;
+            ButtonNoParallelLinq.Enabled = false;
 
             Stopwatch watch = Stopwatch.StartNew();
             List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqNoAsParallelAsync();
@@ -99,12 +99,12 @@ namespace MainForm
 
             textNoParalellAsyn.Text = elementsForLoad +" items processed in "+ watch.ElapsedMilliseconds.ToString() +"ms";
 
-            ButtonNoParaAsyn.Enabled = true;
+            ButtonNoParallelLinq.Enabled = true;
         }
 
         private async void ButtonParalellAsyn_Click(object sender, EventArgs e)
         {
-            ButtonParalellAsyn.Enabled = false;
+            ButtonParalellLinq.Enabled = false;
 
             Stopwatch watch = Stopwatch.StartNew();
             List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqAsParallelAsync();
@@ -112,7 +112,23 @@ namespace MainForm
 
             textParallelAsym.Text = elementsForLoad + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
 
-            ButtonParalellAsyn.Enabled = true;
+            ButtonParalellLinq.Enabled = true;
+        }
+
+        private void RestartButton_Click(object sender, EventArgs e)
+        {
+            inputNumberValues.Enabled = true;
+            inputNumberValues.Clear();
+
+            LoadDataButton.Enabled = true;
+
+            textNoParalellAsyn.Clear();
+            ButtonNoParallelLinq.Enabled = false;
+
+            textParallelAsym.Clear();
+            ButtonNoParallelLinq.Enabled = false;
+
+            TextStatusProgress.Clear();
         }
     }
 }

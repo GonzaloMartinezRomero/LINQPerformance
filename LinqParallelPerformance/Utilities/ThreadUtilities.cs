@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace LinqParallelPerformance.Utilities
 {
-    public static class ThreadUtilities
+    public sealed class ThreadUtilities
     {
-        private static object lockObject = new object();
-        private static int currentThreadID = 1;
+        private object lockObject = new object();
+        private int currentThreadID = 1;
 
-        public static int GetThreadIdentificator()
+        public int GetThreadIdentificator()
         {
             lock (lockObject)
             {
