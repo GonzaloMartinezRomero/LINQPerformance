@@ -14,48 +14,56 @@ namespace LinqParallelPerformance.Manager
         public const uint MAX_THREAD_POOL = 4;
 
         private List<DefaultModel> collectionObjects = new List<DefaultModel>();
-
         private readonly DateTime dateTimeNow = DateTime.Now;
         private readonly List<DefaultModel.DefaultEnum> listDefaultEnums = new List<DefaultModel.DefaultEnum>()
         {
             DefaultModel.DefaultEnum.Test1,
             DefaultModel.DefaultEnum.Test3
         };
-
         public LinqParallelManager() { }
 
         public event EventHandler OnDataLoaded;
-
         public delegate void StatusProgress(int threadID,ulong itemsProcessed);
         public event StatusProgress OnStatusProgress;
 
-        public void LoadData(ulong dataSize)
+        public void LoadData(ulong dataSize, int numberOfThreads)
         {
+            if (numberOfThreads > MAX_THREAD_POOL || numberOfThreads < 1)
+                throw new Exception($"MIN THREAD POOL ALLOWED: 1 Threads || MAX THREAD POOL ALLOWED: {MAX_THREAD_POOL} Threads");
+
             ConcurrentBag<DefaultModel> concurrentListCollectionObject = new ConcurrentBag<DefaultModel>();
             ThreadUtilities threadUtilities = new ThreadUtilities();
 
             List<Task> taskList = new List<Task>();
-            ulong batchSize = dataSize / MAX_THREAD_POOL;
+            ulong batchSize = dataSize / (ulong)numberOfThreads;
 
-            ulong ratioFrecuency = batchSize / 10;
+            ulong ratioFrecuency = batchSize / 20;
             ulong refreshFrecuency = (ratioFrecuency >= 1) ? ratioFrecuency : 1;
          
-            for (int i = 1; i <= MAX_THREAD_POOL; ++i)
+            for (int i = 1; i <= numberOfThreads; ++i)
             {
                 taskList.Add(Task.Factory.StartNew(() =>
                 {
                     ulong currentAmountItems = refreshFrecuency;
                     int threadID = threadUtilities.GetThreadIdentificator();
 
-                    for (ulong currentItem = 1; currentItem <= batchSize; ++currentItem)
-                    {
-                        if (currentItem == currentAmountItems)
-                        {
-                            OnStatusProgress?.Invoke(threadID, currentItem);
-                            currentAmountItems += refreshFrecuency;
+                    List<Task> taskListStatusProgress = new List<Task>();
+
+                    for (ulong itemsProcessed = 1; itemsProcessed <= batchSize; ++itemsProcessed)
+                    {   
+                        if (OnStatusProgress != null && (itemsProcessed == currentAmountItems))
+                        {   
+                            Task taskStatusProgress = threadUtilities.CallStatusProgress(OnStatusProgress, threadID, itemsProcessed);
+                            taskListStatusProgress.Add(taskStatusProgress);
+
+                            currentAmountItems += refreshFrecuency;                          
                         }
                         concurrentListCollectionObject.Add(GenerateRandomDefaultModel());
                     }
+
+                    if(taskListStatusProgress.Count > 0)
+                        Task.WaitAll(taskListStatusProgress.ToArray());
+
                 },TaskCreationOptions.LongRunning));
             }
                 

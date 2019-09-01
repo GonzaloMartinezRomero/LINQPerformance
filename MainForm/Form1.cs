@@ -1,33 +1,30 @@
-﻿using LinqParallelPerformance.Model;
+﻿using LinqParallelPerformance.Manager;
+using LinqParallelPerformance.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Linq;
-using LinqParallelPerformance.Manager;
-using System.Text;
-using System.Collections.Concurrent;
 
 namespace MainForm
 {
     public partial class Form1 : Form
     {
+        private const long MB_RATIO = 1048576;
         private ulong elementsForLoad = 0;
+        private int numberOfThreads = 1;
         private LinqParallelManager linqPerformanceManager = new LinqParallelManager();
         private Action<int,ulong> delegateStatusBar = null;
         private Dictionary<int, ulong> threadInformationDataLoaded = new Dictionary<int, ulong>();
-        private object lockObject = new object();
-         
+        
         public Form1()
         {
             InitializeComponent();
            
             linqPerformanceManager.OnStatusProgress += LinqPerformanceManager_OnStatusProgress;
-            delegateStatusBar = new Action<int, ulong>(ShowLoadInformation);            
-
-            for (int i = 1; i <= LinqParallelManager.MAX_THREAD_POOL; ++i)
-                threadInformationDataLoaded.Add(i, 0);
+            delegateStatusBar = new Action<int, ulong>(ShowLoadInformation);                     
         }
      
         private void LinqPerformanceManager_OnStatusProgress(int threadID, ulong itemsProcessed)
@@ -36,19 +33,16 @@ namespace MainForm
         }            
 
         private void ShowLoadInformation(int threadID, ulong dataLoaded)
-        {
-            lock (lockObject)
-            {
-                Console.WriteLine();
-                threadInformationDataLoaded[threadID] = dataLoaded;
-                StringBuilder textInformation = new StringBuilder();
+        {       
+            threadInformationDataLoaded[threadID] = dataLoaded;
+            StringBuilder textInformation = new StringBuilder();
+            textInformation.AppendLine("Generating complex objects...");
 
-                foreach (KeyValuePair<int, ulong> kvp in threadInformationDataLoaded.OrderBy(x => x.Key))
-                    textInformation.AppendLine($"Thread {kvp.Key}: {kvp.Value} items processed");
+            foreach (KeyValuePair<int, ulong> kvp in threadInformationDataLoaded.OrderBy(x => x.Key))
+                textInformation.AppendLine($"Thread {kvp.Key}: {kvp.Value} items processed");
 
-                TextStatusProgress.Text = textInformation.ToString();
-                TextStatusProgress.Refresh();
-            }
+            TextStatusProgress.Text = textInformation.ToString();
+            TextStatusProgress.Refresh();
         }
 
         private async void LoadDataAsync(object sender, EventArgs e)
@@ -61,8 +55,16 @@ namespace MainForm
 
                 LoadDataButton.Enabled = false;
 
-                await Task.Run(() => { linqPerformanceManager.LoadData(elementsForLoad); });
-                TextStatusProgress.Text += Environment.NewLine + "All items loaded!!";
+                threadInformationDataLoaded.Clear();
+                for (int i = 1; i <= numberOfThreads; ++i)
+                    threadInformationDataLoaded.Add(i, 0);
+
+                Stopwatch watch = Stopwatch.StartNew();
+                await Task.Run(() => { linqPerformanceManager.LoadData(elementsForLoad, numberOfThreads); });
+                watch.Stop();
+
+                TextStatusProgress.Text += Environment.NewLine + $"Memory usage: {System.GC.GetTotalMemory(forceFullCollection:true)/ MB_RATIO} MB";
+                TextStatusProgress.Text += Environment.NewLine + $"All items loaded in {watch.ElapsedMilliseconds.ToString()} ms!!";
                 TextStatusProgress.Update();
 
                 ButtonNoParallelLinq.Enabled = true;
@@ -75,13 +77,15 @@ namespace MainForm
         }
 
         private void CheckInputParameters()
-        {
-            string numberOfItems = inputNumberValues.Text;
+        {  
+            if (!UInt64.TryParse(inputNumberValues.Value.ToString(), out elementsForLoad))
+                throw new Exception("Invalid input parameter number of items. Must be a integer number");
 
-            if (!UInt64.TryParse(numberOfItems, out elementsForLoad))
-                throw new Exception("Invalid input parameter. Must be a integer number");
+            if (!Int32.TryParse(numberOfThreadInput.Value.ToString(),out numberOfThreads))
+                throw new Exception("Invalid input parameter of threads. Must be a integer number");
 
             inputNumberValues.Enabled = false;
+            numberOfThreadInput.Enabled = false;
         }      
 
         private void LoadProgress(string status)
@@ -118,7 +122,7 @@ namespace MainForm
         private void RestartButton_Click(object sender, EventArgs e)
         {
             inputNumberValues.Enabled = true;
-            inputNumberValues.Clear();
+            numberOfThreadInput.Enabled = true;
 
             LoadDataButton.Enabled = true;
 
