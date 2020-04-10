@@ -76,6 +76,7 @@ namespace MainForm
 
                 TextStatusProgress.Text += Environment.NewLine + $"Memory usage: {System.GC.GetTotalMemory(forceFullCollection:true)/ MB_RATIO} MB";
                 TextStatusProgress.Text += Environment.NewLine + $"All items loaded in {watch.ElapsedMilliseconds.ToString()} ms!!";
+                TextStatusProgress.Text += Environment.NewLine + $"Processor cores: {Environment.ProcessorCount}";
                 TextStatusProgress.Update();
 
                 ButtonNoParallelLinq.Enabled = true;

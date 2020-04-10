@@ -289,7 +289,7 @@
             this.groupBox3.Controls.Add(this.numericDegreeOfParalelism);
             this.groupBox3.Controls.Add(this.label4);
             this.groupBox3.Controls.Add(this.comboParallelModes);
-            this.groupBox3.Location = new System.Drawing.Point(514, 15);
+            this.groupBox3.Location = new System.Drawing.Point(514, 10);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(417, 136);
             this.groupBox3.TabIndex = 11;
@@ -329,7 +329,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(979, 345);
+            this.ClientSize = new System.Drawing.Size(937, 345);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.RestartButton);
