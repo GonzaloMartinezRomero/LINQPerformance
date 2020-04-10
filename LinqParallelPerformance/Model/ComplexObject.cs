@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqParallelPerformance.Model
 {
-    public sealed class DefaultModel
+    public sealed class ComplexObject
     {
         public enum DefaultEnum
         {

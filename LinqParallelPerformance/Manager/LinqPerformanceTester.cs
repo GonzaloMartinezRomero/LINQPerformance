@@ -10,44 +10,47 @@ using System.Threading.Tasks;
 
 namespace LinqParallelPerformance.Manager
 {
-    public class LinqParallelManager
+    public class LinqPerformanceTester
     {
-        public const uint MAX_THREAD_POOL = 5;
-        public const int REFRESH_FRECUENCY = 10;
-
-        private List<DefaultModel> collectionObjects = new List<DefaultModel>();
-        private readonly DateTime dateTimeNow = DateTime.Now;
-        private readonly List<DefaultModel.DefaultEnum> listDefaultEnums = new List<DefaultModel.DefaultEnum>()
-        {
-            DefaultModel.DefaultEnum.Test1,
-            DefaultModel.DefaultEnum.Test3
-        };
-
-        public LinqParallelManager() { }
+        public const uint MAX_THREAD_POOL = 8;
+        public const int REFRESH_FRECUENCY = 30;
 
         public event EventHandler OnDataLoaded;
-        public delegate void StatusProgress(int threadID,ulong itemsProcessed);
+        public delegate void StatusProgress(int threadNumber, int threadID, ulong itemsProcessed);
         public event StatusProgress OnStatusProgress;
+
+        private List<ComplexObject> collectionObjects = new List<ComplexObject>();
+        private readonly DateTime dateTimeNow = DateTime.Now;
+        private readonly List<ComplexObject.DefaultEnum> listDefaultEnums = new List<ComplexObject.DefaultEnum>()
+        {
+            ComplexObject.DefaultEnum.Test1,
+            ComplexObject.DefaultEnum.Test3
+        };
+
+        private int threadNumber = 1;
+        private object lockedObject = new object();
+
+        public LinqPerformanceTester() { }
 
         public void LoadData(ulong dataSize, int numberOfThreads, TaskCreationOptions taskCreationOptions)
         {
             if (numberOfThreads > MAX_THREAD_POOL || numberOfThreads < 1)
                 throw new Exception($"MIN THREAD POOL ALLOWED: 1 Threads || MAX THREAD POOL ALLOWED: {MAX_THREAD_POOL} Threads");
 
-            ConcurrentBag<DefaultModel> concurrentListCollectionObject = new ConcurrentBag<DefaultModel>();
+            ConcurrentBag<ComplexObject> concurrentListCollectionObject = new ConcurrentBag<ComplexObject>();
 
             List<Task> taskList = new List<Task>();
             ulong batchSize = dataSize / (ulong)numberOfThreads;
 
             ulong ratioFrecuency = batchSize / REFRESH_FRECUENCY;
             ulong refreshFrecuency = (ratioFrecuency >= 1) ? ratioFrecuency : 1;
-         
+            
             for (int i = 1; i <= numberOfThreads; ++i)
             {
-                Console.WriteLine("Creating thread...");
-
-                taskList.Add(Task.Factory.StartNew(() =>
+                taskList.Add(Task.Factory.StartNew(()=>
                 {
+                    int numberOfThread = GetThreadNumber();
+
                     ulong currentAmountItems = refreshFrecuency;
 
                     for (ulong itemsProcessed = 1; itemsProcessed <= batchSize; ++itemsProcessed)
@@ -55,7 +58,7 @@ namespace LinqParallelPerformance.Manager
                         //Notify the numbers of items processed
                         if (OnStatusProgress != null && (itemsProcessed == currentAmountItems))
                         { 
-                            NotifyUtilities.Notify(OnStatusProgress, Thread.CurrentThread.ManagedThreadId, itemsProcessed);                          
+                            NotifyUtilities.Notify(OnStatusProgress, numberOfThread, Thread.CurrentThread.ManagedThreadId, itemsProcessed);                          
                             currentAmountItems += refreshFrecuency;                          
                         }
 
@@ -69,22 +72,20 @@ namespace LinqParallelPerformance.Manager
             //Wait for finish 
             Task.WaitAll(taskList.ToArray());
 
-            collectionObjects = new List<DefaultModel>(concurrentListCollectionObject);
+            collectionObjects = new List<ComplexObject>(concurrentListCollectionObject);
 
             OnDataLoaded?.Invoke(this, null);
         }
 
         public void ClearLoadedData()
         {
+            threadNumber = 1;
             collectionObjects.Clear();
-        }
+        }                                  
 
-        //Return as copy
-        public List<DefaultModel> GetObjectsCollection() => new List<DefaultModel>(collectionObjects);
-
-        public List<DefaultModel> ComplexLinqNoAsParallel()
+        public List<ComplexObject> ComplexLinqNoAsParallel()
         {
-            List<DefaultModel> result = collectionObjects.Where(FilterWhere)
+            List<ComplexObject> result = collectionObjects.Where(FilterWhere)
                                                          .Select(SelectFilter)
                                                          .OrderBy(x=>x.Date)
                                                          .ThenBy(x=>x.Name)
@@ -93,14 +94,14 @@ namespace LinqParallelPerformance.Manager
             return result;
         }
 
-        public async Task<List<DefaultModel>> ComplexLinqNoAsParallelAsync()
+        public async Task<List<ComplexObject>> ComplexLinqNoAsParallelAsync()
         {
             return await Task.Run(() => { return ComplexLinqNoAsParallel(); });
         }
 
-        public List<DefaultModel> ComplexLinqAsParallel(ParallelExecutionMode parallelExecutionMode, int degreeOfParalelism)
+        public List<ComplexObject> ComplexLinqAsParallel(ParallelExecutionMode parallelExecutionMode, int degreeOfParalelism)
         {
-            List<DefaultModel> result = collectionObjects.AsParallel()
+            List<ComplexObject> result = collectionObjects.AsParallel()
                                                          .WithExecutionMode(parallelExecutionMode)
                                                          .WithDegreeOfParallelism(degreeOfParalelism)
                                                          .Where(FilterWhere)
@@ -112,21 +113,21 @@ namespace LinqParallelPerformance.Manager
             return result;
         }
 
-        public async Task<List<DefaultModel>> ComplexLinqAsParallelAsync(ParallelExecutionMode parallelExecutionMode, int degreeOfParalelism)
+        public async Task<List<ComplexObject>> ComplexLinqAsParallelAsync(ParallelExecutionMode parallelExecutionMode, int degreeOfParalelism)
         {
             return await Task.Run(() => { return ComplexLinqAsParallel(parallelExecutionMode, degreeOfParalelism); });
         }
 
-        private DefaultModel GenerateRandomDefaultModel()
+        private ComplexObject GenerateRandomDefaultModel()
         {
-            Array arrayOfEnum = Enum.GetValues(typeof(DefaultModel.DefaultEnum));
+            Array arrayOfEnum = Enum.GetValues(typeof(ComplexObject.DefaultEnum));
             int numberOfEnum = arrayOfEnum.Length;
 
-            DefaultModel model = new DefaultModel()
+            ComplexObject model = new ComplexObject()
             {
                 Name = RandomUtilities.RandomString(),
                 Date = RandomUtilities.RandomDate(),
-                EnumDefault = (DefaultModel.DefaultEnum)arrayOfEnum.GetValue(RandomUtilities.RandomInteger() % numberOfEnum),
+                EnumDefault = (ComplexObject.DefaultEnum)arrayOfEnum.GetValue(RandomUtilities.RandomInteger() % numberOfEnum),
                 Number = RandomUtilities.RandomInteger(),
                 LongNumber = RandomUtilities.RandomDouble()
             };
@@ -134,9 +135,9 @@ namespace LinqParallelPerformance.Manager
             return model;
         }
 
-        private DefaultModel SelectFilter(DefaultModel defaultModel)
+        private ComplexObject SelectFilter(ComplexObject defaultModel)
         {
-            return new DefaultModel()
+            return new ComplexObject()
             {
                 Name = defaultModel.Name,
                 Date = defaultModel.Date,
@@ -146,7 +147,7 @@ namespace LinqParallelPerformance.Manager
             };
         }
 
-        private bool FilterWhere(DefaultModel defaultModel)
+        private bool FilterWhere(ComplexObject defaultModel)
         {
             List<bool> generalStateFilter = new List<bool>();
 
@@ -172,6 +173,14 @@ namespace LinqParallelPerformance.Manager
             generalStateFilter.Add(enumOk);
 
             return !generalStateFilter.Any(x => x == false);
+        }
+
+        private int GetThreadNumber()
+        {
+            lock (lockedObject)
+            {
+                return threadNumber++;
+            }
         }
     }
 }

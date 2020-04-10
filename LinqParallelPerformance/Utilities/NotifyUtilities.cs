@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LinqParallelPerformance.Manager;
-using static LinqParallelPerformance.Manager.LinqParallelManager;
+﻿using System.Collections.Concurrent;
+using static LinqParallelPerformance.Manager.LinqPerformanceTester;
 
 namespace LinqParallelPerformance.Utilities
 {
@@ -21,20 +15,21 @@ namespace LinqParallelPerformance.Utilities
             InstanceNotifyUtilities = new NotifyUtilities();
         }
 
-        internal static void Notify(StatusProgress onStatusProgress, int threadID, ulong itemsProcessed)
+        internal static void Notify(StatusProgress onStatusProgress ,int threadNumber, int threadID, ulong itemsProcessed)
         {
             //Add notification request
             InstanceNotifyUtilities.threadsRequestNotify.Enqueue(new NotifyDTO()
             {
                 ThreadID = threadID,
                 ItemsProcessed = itemsProcessed,
+                ThreadNumber = threadNumber,
                 OnStatusProgress = onStatusProgress
             });
 
-            InstanceNotifyUtilities.StartNotify();
+            InstanceNotifyUtilities.StartToNotify();
         }
 
-        private void StartNotify()
+        private void StartToNotify()
         {
             while(!threadsRequestNotify.IsEmpty)
             {
@@ -50,8 +45,9 @@ namespace LinqParallelPerformance.Utilities
             public int ThreadID { get; set; }
             public ulong ItemsProcessed { get; set; }
             public StatusProgress OnStatusProgress { get; set; }
+            public int ThreadNumber { get; internal set; }
 
-            public void CallNotifier() => OnStatusProgress?.Invoke(ThreadID, ItemsProcessed);
+            public void CallNotifier() => OnStatusProgress?.Invoke(ThreadNumber, ThreadID, ItemsProcessed);
         }
     }
 }

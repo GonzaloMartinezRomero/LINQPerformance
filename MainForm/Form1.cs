@@ -16,9 +16,9 @@ namespace MainForm
         private ulong elementsForLoad = 0;
         private int numberOfThreads = 1;
         private int degreeParalelism = 1;
-        private LinqParallelManager linqPerformanceManager = new LinqParallelManager();
-        private Action<int,ulong> delegateStatusBar = null;
-        private Dictionary<int, ulong> threadInformationDataLoaded = new Dictionary<int, ulong>();
+        private LinqPerformanceTester linqPerformanceManager = new LinqPerformanceTester();
+        private Action<int,int,ulong> delegateStatusBar = null;
+        private Dictionary<ThreadKey, ulong> threadInformationDataLoaded = new Dictionary<ThreadKey, ulong>();
         
         public Form1()
         {
@@ -26,28 +26,28 @@ namespace MainForm
            
             //Configure Form...
             linqPerformanceManager.OnStatusProgress += LinqPerformanceManager_OnStatusProgress;
-            delegateStatusBar = new Action<int, ulong>(ShowLoadInformation);
+            delegateStatusBar = new Action<int,int, ulong>(ShowLoadInformation);
 
             this.comboParallelModes.Items.AddRange(Enum.GetNames(typeof(ParallelExecutionMode)));
             this.comboTaskCreationOpt.Items.AddRange(Enum.GetNames(typeof(TaskCreationOptions)));
 
-            this.numberOfThreadInput.Maximum = LinqParallelManager.MAX_THREAD_POOL;
+            this.numberOfThreadInput.Maximum = LinqPerformanceTester.MAX_THREAD_POOL;
         }
      
-        private void LinqPerformanceManager_OnStatusProgress(int threadID, ulong itemsProcessed)
+        private void LinqPerformanceManager_OnStatusProgress(int threadNumber, int threadID, ulong itemsProcessed)
         {   
-            object result = Invoke(delegateStatusBar,new object[] {threadID, itemsProcessed } );
+            object result = Invoke(delegateStatusBar,new object[] { threadNumber, threadID, itemsProcessed } );
         }            
 
-        private void ShowLoadInformation(int threadID, ulong dataLoaded)
-        {       
-            threadInformationDataLoaded[threadID] = dataLoaded;
+        private void ShowLoadInformation(int threadNumber, int threadID, ulong dataLoaded)
+        { 
+            threadInformationDataLoaded[new ThreadKey(threadNumber,threadID)] = dataLoaded;
 
             StringBuilder textInformation = new StringBuilder();
             textInformation.AppendLine("Generating complex objects...");
 
-            foreach (KeyValuePair<int, ulong> kvp in threadInformationDataLoaded.OrderBy(x => x.Key))
-                textInformation.AppendLine($"Thread ID{kvp.Key}: {kvp.Value} items processed");
+            foreach (KeyValuePair<ThreadKey, ulong> kvp in threadInformationDataLoaded.OrderBy(x => x.Key.ThreadNumber))
+                textInformation.AppendLine($"Thread #{kvp.Key.ThreadNumber}:(ID {kvp.Key.ThreadID}): {kvp.Value} items processed");
 
             TextStatusProgress.Text = textInformation.ToString();
             TextStatusProgress.Refresh();
@@ -84,7 +84,7 @@ namespace MainForm
             }
             catch (Exception exception)
             {
-                TextStatusProgress.Text = exception.Message;
+                TextStatusProgress.Text = BuildTraceException(exception);
             }
         }
 
@@ -119,15 +119,15 @@ namespace MainForm
                 textNoParalellAsyn.Text = "Processing....";
 
                 Stopwatch watch = Stopwatch.StartNew();
-                List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqNoAsParallelAsync();
+                List<ComplexObject> processedItems = await linqPerformanceManager.ComplexLinqNoAsParallelAsync();
                 watch.Stop();
 
-                textNoParalellAsyn.Text = elementsForLoad + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
+                textNoParalellAsyn.Text = processedItems.Count + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
 
             }
             catch (Exception exception)
             {
-                textNoParalellAsyn.Text = exception.Message;
+                textNoParalellAsyn.Text = BuildTraceException(exception);
             }
             finally
             {
@@ -150,14 +150,14 @@ namespace MainForm
                     throw new Exception("Invalid input parameter of degree paralelism. Must be a integer number");
 
                 Stopwatch watch = Stopwatch.StartNew();
-                List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqAsParallelAsync(parallelExecutionMode, degreeParalelism);
+                List<ComplexObject> processedItems = await linqPerformanceManager.ComplexLinqAsParallelAsync(parallelExecutionMode, degreeParalelism);
                 watch.Stop();
 
-                textParallelAsym.Text = elementsForLoad + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
+                textParallelAsym.Text = processedItems.Count + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
             }
             catch (Exception exception)
             {
-                textParallelAsym.Text = exception.Message;
+                textParallelAsym.Text = BuildTraceException(exception);
             }
             finally
             {
@@ -181,6 +181,55 @@ namespace MainForm
             comboTaskCreationOpt.Enabled = true;
 
             TextStatusProgress.Clear();
+        }
+
+        private string BuildTraceException(Exception exception)
+        {
+            StringBuilder exceptionMessage = new StringBuilder();
+            Exception exceptionAux = exception;
+
+            while(exceptionAux != null)
+            {
+                exceptionMessage.AppendLine(exceptionAux.Message);
+                exceptionAux = exceptionAux.InnerException;
+            }
+
+            return exceptionMessage.ToString();
+        }
+
+        private sealed class ThreadKey
+        {
+            public int ThreadNumber { get; }
+            public int ThreadID { get; }
+
+            private ThreadKey() { }
+
+            public ThreadKey(int threadNumber, int threadID)
+            {
+                this.ThreadNumber = threadNumber;
+                this.ThreadID = threadID;
+            }
+
+            public override bool Equals(object obj)
+            {
+               if(obj is ThreadKey threadKeyAux)
+               {
+                    return this.ThreadNumber == threadKeyAux.ThreadNumber &&
+                           this.ThreadID == threadKeyAux.ThreadID;
+               }
+
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                return this.ToString().GetHashCode();
+            }
+
+            public override string ToString()
+            {
+                return ThreadNumber.ToString() + ThreadID.ToString();
+            }
         }
     }
 }

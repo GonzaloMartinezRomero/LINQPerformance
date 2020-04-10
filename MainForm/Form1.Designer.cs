@@ -36,7 +36,9 @@
             this.LoadDataButton = new System.Windows.Forms.Button();
             this.TextStatusProgress = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.inputNumberValues = new System.Windows.Forms.NumericUpDown();
+            this.comboTaskCreationOpt = new System.Windows.Forms.ComboBox();
             this.numberOfThreadInput = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -48,8 +50,6 @@
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.comboTaskCreationOpt = new System.Windows.Forms.ComboBox();
-            this.label6 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.inputNumberValues)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numberOfThreadInput)).BeginInit();
@@ -62,7 +62,7 @@
             // 
             this.ButtonNoParallelLinq.Enabled = false;
             this.ButtonNoParallelLinq.Location = new System.Drawing.Point(9, 22);
-            this.ButtonNoParallelLinq.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.ButtonNoParallelLinq.Margin = new System.Windows.Forms.Padding(2);
             this.ButtonNoParallelLinq.Name = "ButtonNoParallelLinq";
             this.ButtonNoParallelLinq.Size = new System.Drawing.Size(98, 36);
             this.ButtonNoParallelLinq.TabIndex = 0;
@@ -74,7 +74,7 @@
             // 
             this.ButtonParalellLinq.Enabled = false;
             this.ButtonParalellLinq.Location = new System.Drawing.Point(9, 89);
-            this.ButtonParalellLinq.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.ButtonParalellLinq.Margin = new System.Windows.Forms.Padding(2);
             this.ButtonParalellLinq.Name = "ButtonParalellLinq";
             this.ButtonParalellLinq.Size = new System.Drawing.Size(98, 36);
             this.ButtonParalellLinq.TabIndex = 1;
@@ -85,7 +85,7 @@
             // textParallelAsym
             // 
             this.textParallelAsym.Location = new System.Drawing.Point(121, 89);
-            this.textParallelAsym.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textParallelAsym.Margin = new System.Windows.Forms.Padding(2);
             this.textParallelAsym.Multiline = true;
             this.textParallelAsym.Name = "textParallelAsym";
             this.textParallelAsym.ReadOnly = true;
@@ -95,7 +95,7 @@
             // textNoParalellAsyn
             // 
             this.textNoParalellAsyn.Location = new System.Drawing.Point(121, 22);
-            this.textNoParalellAsyn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textNoParalellAsyn.Margin = new System.Windows.Forms.Padding(2);
             this.textNoParalellAsyn.Multiline = true;
             this.textNoParalellAsyn.Name = "textNoParalellAsyn";
             this.textNoParalellAsyn.ReadOnly = true;
@@ -105,7 +105,7 @@
             // LoadDataButton
             // 
             this.LoadDataButton.Location = new System.Drawing.Point(393, 280);
-            this.LoadDataButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.LoadDataButton.Margin = new System.Windows.Forms.Padding(2);
             this.LoadDataButton.Name = "LoadDataButton";
             this.LoadDataButton.Size = new System.Drawing.Size(90, 32);
             this.LoadDataButton.TabIndex = 4;
@@ -116,10 +116,11 @@
             // TextStatusProgress
             // 
             this.TextStatusProgress.Location = new System.Drawing.Point(103, 128);
-            this.TextStatusProgress.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.TextStatusProgress.Margin = new System.Windows.Forms.Padding(2);
             this.TextStatusProgress.Multiline = true;
             this.TextStatusProgress.Name = "TextStatusProgress";
             this.TextStatusProgress.ReadOnly = true;
+            this.TextStatusProgress.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.TextStatusProgress.Size = new System.Drawing.Size(380, 138);
             this.TextStatusProgress.TabIndex = 8;
             // 
@@ -135,18 +136,28 @@
             this.groupBox1.Controls.Add(this.LoadDataButton);
             this.groupBox1.Controls.Add(this.TextStatusProgress);
             this.groupBox1.Location = new System.Drawing.Point(9, 10);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
             this.groupBox1.Size = new System.Drawing.Size(500, 325);
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Load Data Configuration";
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(4, 95);
+            this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(93, 13);
+            this.label6.TabIndex = 22;
+            this.label6.Text = "Task Creation Opt";
+            // 
             // inputNumberValues
             // 
             this.inputNumberValues.Location = new System.Drawing.Point(103, 24);
-            this.inputNumberValues.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.inputNumberValues.Margin = new System.Windows.Forms.Padding(2);
             this.inputNumberValues.Maximum = new decimal(new int[] {
             50000000,
             0,
@@ -166,10 +177,18 @@
             0,
             0});
             // 
+            // comboTaskCreationOpt
+            // 
+            this.comboTaskCreationOpt.FormattingEnabled = true;
+            this.comboTaskCreationOpt.Location = new System.Drawing.Point(103, 92);
+            this.comboTaskCreationOpt.Name = "comboTaskCreationOpt";
+            this.comboTaskCreationOpt.Size = new System.Drawing.Size(218, 21);
+            this.comboTaskCreationOpt.TabIndex = 21;
+            // 
             // numberOfThreadInput
             // 
             this.numberOfThreadInput.Location = new System.Drawing.Point(103, 57);
-            this.numberOfThreadInput.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.numberOfThreadInput.Margin = new System.Windows.Forms.Padding(2);
             this.numberOfThreadInput.Maximum = new decimal(new int[] {
             4,
             0,
@@ -222,7 +241,7 @@
             // RestartButton
             // 
             this.RestartButton.Location = new System.Drawing.Point(841, 290);
-            this.RestartButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.RestartButton.Margin = new System.Windows.Forms.Padding(2);
             this.RestartButton.Name = "RestartButton";
             this.RestartButton.Size = new System.Drawing.Size(90, 32);
             this.RestartButton.TabIndex = 10;
@@ -307,24 +326,6 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "LINQ No Parallel Test";
             // 
-            // comboTaskCreationOpt
-            // 
-            this.comboTaskCreationOpt.FormattingEnabled = true;
-            this.comboTaskCreationOpt.Location = new System.Drawing.Point(103, 92);
-            this.comboTaskCreationOpt.Name = "comboTaskCreationOpt";
-            this.comboTaskCreationOpt.Size = new System.Drawing.Size(218, 21);
-            this.comboTaskCreationOpt.TabIndex = 21;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(4, 95);
-            this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(93, 13);
-            this.label6.TabIndex = 22;
-            this.label6.Text = "Task Creation Opt";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -335,7 +336,7 @@
             this.Controls.Add(this.RestartButton);
             this.Controls.Add(this.groupBox1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Benchmark Parallel LINQ ";
             this.groupBox1.ResumeLayout(false);
