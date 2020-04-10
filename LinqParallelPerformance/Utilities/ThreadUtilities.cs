@@ -4,40 +4,54 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LinqParallelPerformance.Manager;
 using static LinqParallelPerformance.Manager.LinqParallelManager;
 
 namespace LinqParallelPerformance.Utilities
 {
-    public sealed class ThreadUtilities
+    public sealed class NotifyUtilities 
     {
-        private object lockObjectIdentificator = new object();
-        private object lockObjectEventStatusProgress = new object();
-        private int currentThreadID = 1;
-        private ConcurrentQueue<Tuple<int,ulong>> eventQueue = new ConcurrentQueue<Tuple<int, ulong>>();
+        private static NotifyUtilities InstanceNotifyUtilities = null;
+        private readonly ConcurrentQueue<NotifyDTO> threadsRequestNotify = new ConcurrentQueue<NotifyDTO>();
 
-        public int GetThreadIdentificator()
+        private NotifyUtilities() { }
+
+        static NotifyUtilities()
         {
-            lock (lockObjectIdentificator)
+            InstanceNotifyUtilities = new NotifyUtilities();
+        }
+
+        internal static void Notify(StatusProgress onStatusProgress, int threadID, ulong itemsProcessed)
+        {
+            //Add notification request
+            InstanceNotifyUtilities.threadsRequestNotify.Enqueue(new NotifyDTO()
             {
-                return currentThreadID++;
+                ThreadID = threadID,
+                ItemsProcessed = itemsProcessed,
+                OnStatusProgress = onStatusProgress
+            });
+
+            InstanceNotifyUtilities.StartNotify();
+        }
+
+        private void StartNotify()
+        {
+            while(!threadsRequestNotify.IsEmpty)
+            {
+                if(threadsRequestNotify.TryDequeue(out NotifyDTO notifyDTO))
+                {
+                    notifyDTO.CallNotifier();
+                }
             }
         }
 
-        public Task CallStatusProgress(StatusProgress eventStatusProgress,int threadID, ulong itemsProcessed)
-        {  
-            eventQueue.Enqueue(new Tuple<int, ulong>(threadID,itemsProcessed));
+        private sealed class NotifyDTO
+        {
+            public int ThreadID { get; set; }
+            public ulong ItemsProcessed { get; set; }
+            public StatusProgress OnStatusProgress { get; set; }
 
-            return Task.Run(() =>
-            {
-                lock (lockObjectEventStatusProgress)
-                { 
-                    while (!eventQueue.IsEmpty)
-                    { 
-                        if (eventQueue.TryDequeue(out Tuple<int, ulong> tupleAux))
-                            eventStatusProgress?.Invoke(tupleAux.Item1, tupleAux.Item2);
-                    }
-                }
-            });
-        } 
+            public void CallNotifier() => OnStatusProgress?.Invoke(ThreadID, ItemsProcessed);
+        }
     }
 }

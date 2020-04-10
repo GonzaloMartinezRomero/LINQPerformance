@@ -15,6 +15,7 @@ namespace MainForm
         private const long MB_RATIO = 1048576;
         private ulong elementsForLoad = 0;
         private int numberOfThreads = 1;
+        private int degreeParalelism = 1;
         private LinqParallelManager linqPerformanceManager = new LinqParallelManager();
         private Action<int,ulong> delegateStatusBar = null;
         private Dictionary<int, ulong> threadInformationDataLoaded = new Dictionary<int, ulong>();
@@ -23,8 +24,14 @@ namespace MainForm
         {
             InitializeComponent();
            
+            //Configure Form...
             linqPerformanceManager.OnStatusProgress += LinqPerformanceManager_OnStatusProgress;
-            delegateStatusBar = new Action<int, ulong>(ShowLoadInformation);                     
+            delegateStatusBar = new Action<int, ulong>(ShowLoadInformation);
+
+            this.comboParallelModes.Items.AddRange(Enum.GetNames(typeof(ParallelExecutionMode)));
+            this.comboTaskCreationOpt.Items.AddRange(Enum.GetNames(typeof(TaskCreationOptions)));
+
+            this.numberOfThreadInput.Maximum = LinqParallelManager.MAX_THREAD_POOL;
         }
      
         private void LinqPerformanceManager_OnStatusProgress(int threadID, ulong itemsProcessed)
@@ -35,11 +42,12 @@ namespace MainForm
         private void ShowLoadInformation(int threadID, ulong dataLoaded)
         {       
             threadInformationDataLoaded[threadID] = dataLoaded;
+
             StringBuilder textInformation = new StringBuilder();
             textInformation.AppendLine("Generating complex objects...");
 
             foreach (KeyValuePair<int, ulong> kvp in threadInformationDataLoaded.OrderBy(x => x.Key))
-                textInformation.AppendLine($"Thread {kvp.Key}: {kvp.Value} items processed");
+                textInformation.AppendLine($"Thread ID{kvp.Key}: {kvp.Value} items processed");
 
             TextStatusProgress.Text = textInformation.ToString();
             TextStatusProgress.Refresh();
@@ -51,16 +59,19 @@ namespace MainForm
 
             try
             {
-                CheckInputParameters();
+                CheckInputLoadDataParameters();
 
-                LoadDataButton.Enabled = false;
+                DisableConfigurationLoadDataButtons();
 
-                threadInformationDataLoaded.Clear();
-                for (int i = 1; i <= numberOfThreads; ++i)
-                    threadInformationDataLoaded.Add(i, 0);
+                threadInformationDataLoaded.Clear();      
+
+                TaskCreationOptions taskCreationOptions = TaskCreationOptions.None;
+                Enum.TryParse(this.comboTaskCreationOpt.SelectedItem?.ToString(), out taskCreationOptions);
+
+                linqPerformanceManager.ClearLoadedData();
 
                 Stopwatch watch = Stopwatch.StartNew();
-                await Task.Run(() => { linqPerformanceManager.LoadData(elementsForLoad, numberOfThreads); });
+                await Task.Run(() => { linqPerformanceManager.LoadData(elementsForLoad, numberOfThreads, taskCreationOptions); });
                 watch.Stop();
 
                 TextStatusProgress.Text += Environment.NewLine + $"Memory usage: {System.GC.GetTotalMemory(forceFullCollection:true)/ MB_RATIO} MB";
@@ -76,16 +87,21 @@ namespace MainForm
             }
         }
 
-        private void CheckInputParameters()
+        private void DisableConfigurationLoadDataButtons()
+        {
+            inputNumberValues.Enabled = false;
+            numberOfThreadInput.Enabled = false;
+            comboTaskCreationOpt.Enabled = false;
+            LoadDataButton.Enabled = false;
+        }
+
+        private void CheckInputLoadDataParameters()
         {  
             if (!UInt64.TryParse(inputNumberValues.Value.ToString(), out elementsForLoad))
                 throw new Exception("Invalid input parameter number of items. Must be a integer number");
 
             if (!Int32.TryParse(numberOfThreadInput.Value.ToString(),out numberOfThreads))
                 throw new Exception("Invalid input parameter of threads. Must be a integer number");
-
-            inputNumberValues.Enabled = false;
-            numberOfThreadInput.Enabled = false;
         }      
 
         private void LoadProgress(string status)
@@ -97,26 +113,55 @@ namespace MainForm
         {
             ButtonNoParallelLinq.Enabled = false;
 
-            Stopwatch watch = Stopwatch.StartNew();
-            List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqNoAsParallelAsync();
-            watch.Stop();
+            try
+            {
+                textNoParalellAsyn.Text = "Processing....";
 
-            textNoParalellAsyn.Text = elementsForLoad +" items processed in "+ watch.ElapsedMilliseconds.ToString() +"ms";
+                Stopwatch watch = Stopwatch.StartNew();
+                List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqNoAsParallelAsync();
+                watch.Stop();
 
-            ButtonNoParallelLinq.Enabled = true;
+                textNoParalellAsyn.Text = elementsForLoad + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
+
+            }
+            catch (Exception exception)
+            {
+                textNoParalellAsyn.Text = exception.Message;
+            }
+            finally
+            {
+                ButtonNoParallelLinq.Enabled = true;
+            }            
         }
 
         private async void ButtonParalellAsyn_Click(object sender, EventArgs e)
         {
             ButtonParalellLinq.Enabled = false;
 
-            Stopwatch watch = Stopwatch.StartNew();
-            List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqAsParallelAsync();
-            watch.Stop();
+            try
+            {
+                textParallelAsym.Text = "Processing....";
 
-            textParallelAsym.Text = elementsForLoad + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
+                ParallelExecutionMode parallelExecutionMode = ParallelExecutionMode.Default;
+                Enum.TryParse(this.comboParallelModes.SelectedItem?.ToString(), out parallelExecutionMode);
 
-            ButtonParalellLinq.Enabled = true;
+                if (!Int32.TryParse(numericDegreeOfParalelism.Value.ToString(), out degreeParalelism))
+                    throw new Exception("Invalid input parameter of degree paralelism. Must be a integer number");
+
+                Stopwatch watch = Stopwatch.StartNew();
+                List<DefaultModel> processedItems = await linqPerformanceManager.ComplexLinqAsParallelAsync(parallelExecutionMode, degreeParalelism);
+                watch.Stop();
+
+                textParallelAsym.Text = elementsForLoad + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
+            }
+            catch (Exception exception)
+            {
+                textParallelAsym.Text = exception.Message;
+            }
+            finally
+            {
+                ButtonParalellLinq.Enabled = true;
+            }                                                 
         }
 
         private void RestartButton_Click(object sender, EventArgs e)
@@ -131,6 +176,8 @@ namespace MainForm
 
             textParallelAsym.Clear();
             ButtonNoParallelLinq.Enabled = false;
+
+            comboTaskCreationOpt.Enabled = true;
 
             TextStatusProgress.Clear();
         }

@@ -5,13 +5,15 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqParallelPerformance.Manager
 {
     public class LinqParallelManager
     {
-        public const uint MAX_THREAD_POOL = 4;
+        public const uint MAX_THREAD_POOL = 5;
+        public const int REFRESH_FRECUENCY = 10;
 
         private List<DefaultModel> collectionObjects = new List<DefaultModel>();
         private readonly DateTime dateTimeNow = DateTime.Now;
@@ -20,58 +22,61 @@ namespace LinqParallelPerformance.Manager
             DefaultModel.DefaultEnum.Test1,
             DefaultModel.DefaultEnum.Test3
         };
+
         public LinqParallelManager() { }
 
         public event EventHandler OnDataLoaded;
         public delegate void StatusProgress(int threadID,ulong itemsProcessed);
         public event StatusProgress OnStatusProgress;
 
-        public void LoadData(ulong dataSize, int numberOfThreads)
+        public void LoadData(ulong dataSize, int numberOfThreads, TaskCreationOptions taskCreationOptions)
         {
             if (numberOfThreads > MAX_THREAD_POOL || numberOfThreads < 1)
                 throw new Exception($"MIN THREAD POOL ALLOWED: 1 Threads || MAX THREAD POOL ALLOWED: {MAX_THREAD_POOL} Threads");
 
             ConcurrentBag<DefaultModel> concurrentListCollectionObject = new ConcurrentBag<DefaultModel>();
-            ThreadUtilities threadUtilities = new ThreadUtilities();
 
             List<Task> taskList = new List<Task>();
             ulong batchSize = dataSize / (ulong)numberOfThreads;
 
-            ulong ratioFrecuency = batchSize / 20;
+            ulong ratioFrecuency = batchSize / REFRESH_FRECUENCY;
             ulong refreshFrecuency = (ratioFrecuency >= 1) ? ratioFrecuency : 1;
          
             for (int i = 1; i <= numberOfThreads; ++i)
             {
+                Console.WriteLine("Creating thread...");
+
                 taskList.Add(Task.Factory.StartNew(() =>
                 {
                     ulong currentAmountItems = refreshFrecuency;
-                    int threadID = threadUtilities.GetThreadIdentificator();
-
-                    List<Task> taskListStatusProgress = new List<Task>();
 
                     for (ulong itemsProcessed = 1; itemsProcessed <= batchSize; ++itemsProcessed)
                     {   
+                        //Notify the numbers of items processed
                         if (OnStatusProgress != null && (itemsProcessed == currentAmountItems))
-                        {   
-                            Task taskStatusProgress = threadUtilities.CallStatusProgress(OnStatusProgress, threadID, itemsProcessed);
-                            taskListStatusProgress.Add(taskStatusProgress);
-
+                        { 
+                            NotifyUtilities.Notify(OnStatusProgress, Thread.CurrentThread.ManagedThreadId, itemsProcessed);                          
                             currentAmountItems += refreshFrecuency;                          
                         }
+
+                        //Add generated items to collection
                         concurrentListCollectionObject.Add(GenerateRandomDefaultModel());
                     }
 
-                    if(taskListStatusProgress.Count > 0)
-                        Task.WaitAll(taskListStatusProgress.ToArray());
-
-                },TaskCreationOptions.LongRunning));
+                }, taskCreationOptions));
             }
-                
+           
+            //Wait for finish 
             Task.WaitAll(taskList.ToArray());
 
             collectionObjects = new List<DefaultModel>(concurrentListCollectionObject);
 
             OnDataLoaded?.Invoke(this, null);
+        }
+
+        public void ClearLoadedData()
+        {
+            collectionObjects.Clear();
         }
 
         //Return as copy
@@ -93,9 +98,11 @@ namespace LinqParallelPerformance.Manager
             return await Task.Run(() => { return ComplexLinqNoAsParallel(); });
         }
 
-        public List<DefaultModel> ComplexLinqAsParallel()
+        public List<DefaultModel> ComplexLinqAsParallel(ParallelExecutionMode parallelExecutionMode, int degreeOfParalelism)
         {
             List<DefaultModel> result = collectionObjects.AsParallel()
+                                                         .WithExecutionMode(parallelExecutionMode)
+                                                         .WithDegreeOfParallelism(degreeOfParalelism)
                                                          .Where(FilterWhere)
                                                          .Select(SelectFilter)
                                                          .OrderBy(x => x.Date)
@@ -105,9 +112,9 @@ namespace LinqParallelPerformance.Manager
             return result;
         }
 
-        public async Task<List<DefaultModel>> ComplexLinqAsParallelAsync()
+        public async Task<List<DefaultModel>> ComplexLinqAsParallelAsync(ParallelExecutionMode parallelExecutionMode, int degreeOfParalelism)
         {
-            return await Task.Run(() => { return ComplexLinqAsParallel(); });
+            return await Task.Run(() => { return ComplexLinqAsParallel(parallelExecutionMode, degreeOfParalelism); });
         }
 
         private DefaultModel GenerateRandomDefaultModel()
