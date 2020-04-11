@@ -10,50 +10,45 @@ using System.Threading.Tasks;
 
 namespace LinqParallelPerformance.Manager
 {
-    public class LinqPerformanceTester
+    public class LinqPerformanceManager
     {
         public const uint MAX_THREAD_POOL = 8;
         public const int REFRESH_FRECUENCY = 30;
 
         public event EventHandler OnDataLoaded;
-        public delegate void StatusProgress(int threadNumber, int threadID, ulong itemsProcessed);
+        public delegate void StatusProgress(int threadNumber, int threadID, int itemsProcessed);
         public event StatusProgress OnStatusProgress;
 
         private List<ComplexObject> collectionObjects = new List<ComplexObject>();
-        private readonly DateTime dateTimeNow = DateTime.Now;
-        private readonly List<ComplexObject.DefaultEnum> listDefaultEnums = new List<ComplexObject.DefaultEnum>()
-        {
-            ComplexObject.DefaultEnum.Test1,
-            ComplexObject.DefaultEnum.Test3
-        };
-
+       
         private int threadNumber = 1;
-        private object lockedObject = new object();
+        private readonly object lockedObject = new object();
 
-        public LinqPerformanceTester() { }
+        public LinqPerformanceManager() { }
 
-        public void LoadData(ulong dataSize, int numberOfThreads, TaskCreationOptions taskCreationOptions)
+        public void LoadData(int dataSize, int numberOfThreads, TaskCreationOptions taskCreationOptions)
         {
             if (numberOfThreads > MAX_THREAD_POOL || numberOfThreads < 1)
                 throw new Exception($"MIN THREAD POOL ALLOWED: 1 Threads || MAX THREAD POOL ALLOWED: {MAX_THREAD_POOL} Threads");
-
+              
             ConcurrentBag<ComplexObject> concurrentListCollectionObject = new ConcurrentBag<ComplexObject>();
 
             List<Task> taskList = new List<Task>();
-            ulong batchSize = dataSize / (ulong)numberOfThreads;
+            int batchSize = dataSize / numberOfThreads;
 
-            ulong ratioFrecuency = batchSize / REFRESH_FRECUENCY;
-            ulong refreshFrecuency = (ratioFrecuency >= 1) ? ratioFrecuency : 1;
+            int ratioFrecuency = batchSize / REFRESH_FRECUENCY;
+            int refreshFrecuency = (ratioFrecuency >= 1) ? ratioFrecuency : 1;
             
             for (int i = 1; i <= numberOfThreads; ++i)
             {
                 taskList.Add(Task.Factory.StartNew(()=>
                 {
                     int numberOfThread = GetThreadNumber();
+                    int currentAmountItems = refreshFrecuency;
+                    ComplexObjectBuilder complexObjectBuilder = new ComplexObjectBuilder();
 
-                    ulong currentAmountItems = refreshFrecuency;
 
-                    for (ulong itemsProcessed = 1; itemsProcessed <= batchSize; ++itemsProcessed)
+                    for (int itemsProcessed = 1; itemsProcessed <= batchSize; ++itemsProcessed)
                     {   
                         //Notify the numbers of items processed
                         if (OnStatusProgress != null && (itemsProcessed == currentAmountItems))
@@ -63,7 +58,7 @@ namespace LinqParallelPerformance.Manager
                         }
 
                         //Add generated items to collection
-                        concurrentListCollectionObject.Add(GenerateRandomDefaultModel());
+                        concurrentListCollectionObject.Add(complexObjectBuilder.GenerateRandomDefaultModel());
                     }
 
                 }, taskCreationOptions));
@@ -118,21 +113,9 @@ namespace LinqParallelPerformance.Manager
             return await Task.Run(() => { return ComplexLinqAsParallel(parallelExecutionMode, degreeOfParalelism); });
         }
 
-        private ComplexObject GenerateRandomDefaultModel()
+        public int NumberOfElementProcessed()
         {
-            Array arrayOfEnum = Enum.GetValues(typeof(ComplexObject.DefaultEnum));
-            int numberOfEnum = arrayOfEnum.Length;
-
-            ComplexObject model = new ComplexObject()
-            {
-                Name = RandomUtilities.RandomString(),
-                Date = RandomUtilities.RandomDate(),
-                EnumDefault = (ComplexObject.DefaultEnum)arrayOfEnum.GetValue(RandomUtilities.RandomInteger() % numberOfEnum),
-                Number = RandomUtilities.RandomInteger(),
-                LongNumber = RandomUtilities.RandomDouble()
-            };
-
-            return model;
+            return this.collectionObjects.Count;
         }
 
         private ComplexObject SelectFilter(ComplexObject defaultModel)
@@ -166,10 +149,11 @@ namespace LinqParallelPerformance.Manager
             bool longNumerOk = Math.Sqrt(defaultModel.LongNumber) > 30.12345d;
             generalStateFilter.Add(longNumerOk);
 
-            bool dateOk = defaultModel.Date > dateTimeNow;
+            bool dateOk = defaultModel.Date > DateTime.Now;
             generalStateFilter.Add(dateOk);
 
-            bool enumOk = listDefaultEnums.Contains(defaultModel.EnumDefault);
+            ComplexObjectBuilder complexObjectBuilder = new ComplexObjectBuilder();
+            bool enumOk = complexObjectBuilder.DefaultsEnums.Contains(defaultModel.EnumDefault);
             generalStateFilter.Add(enumOk);
 
             return !generalStateFilter.Any(x => x == false);

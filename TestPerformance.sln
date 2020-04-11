@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainForm", "MainForm\MainForm.csproj", "{551E7CF8-E3CC-4466-8255-B50059DC02A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqParallelPerformance", "LinqParallelPerformance\LinqParallelPerformance.csproj", "{0BFD04F2-BDBF-4EAF-9841-4C33861FC9C7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LINQPerformance", "LinqParallelPerformance\LINQPerformance.csproj", "{0BFD04F2-BDBF-4EAF-9841-4C33861FC9C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

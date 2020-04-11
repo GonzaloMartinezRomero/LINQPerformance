@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using static LinqParallelPerformance.Manager.LinqPerformanceTester;
+using static LinqParallelPerformance.Manager.LinqPerformanceManager;
 
 namespace LinqParallelPerformance.Utilities
 {
@@ -15,7 +15,7 @@ namespace LinqParallelPerformance.Utilities
             InstanceNotifyUtilities = new NotifyUtilities();
         }
 
-        internal static void Notify(StatusProgress onStatusProgress ,int threadNumber, int threadID, ulong itemsProcessed)
+        internal static void Notify(StatusProgress onStatusProgress ,int threadNumber, int threadID, int itemsProcessed)
         {
             //Add notification request
             InstanceNotifyUtilities.threadsRequestNotify.Enqueue(new NotifyDTO()
@@ -43,7 +43,7 @@ namespace LinqParallelPerformance.Utilities
         private sealed class NotifyDTO
         {
             public int ThreadID { get; set; }
-            public ulong ItemsProcessed { get; set; }
+            public int ItemsProcessed { get; set; }
             public StatusProgress OnStatusProgress { get; set; }
             public int ThreadNumber { get; internal set; }
 

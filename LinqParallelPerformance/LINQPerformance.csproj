@@ -40,7 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Manager\LinqPerformanceTester.cs" />
+    <Compile Include="Manager\ComplexObjectBuilder.cs" />
+    <Compile Include="Manager\LinqPerformanceManager.cs" />
     <Compile Include="Model\ComplexObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\RandomUtilities.cs" />

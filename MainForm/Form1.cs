@@ -13,12 +13,12 @@ namespace MainForm
     public partial class Form1 : Form
     {
         private const long MB_RATIO = 1048576;
-        private ulong elementsForLoad = 0;
+        private int elementsForLoad = 0;
         private int numberOfThreads = 1;
         private int degreeParalelism = 1;
-        private LinqPerformanceTester linqPerformanceManager = new LinqPerformanceTester();
-        private Action<int,int,ulong> delegateStatusBar = null;
-        private Dictionary<ThreadKey, ulong> threadInformationDataLoaded = new Dictionary<ThreadKey, ulong>();
+        private LinqPerformanceManager linqPerformanceManager = new LinqPerformanceManager();
+        private Action<int,int,int> delegateStatusBar = null;
+        private Dictionary<ThreadKey, int> threadInformationDataLoaded = new Dictionary<ThreadKey, int>();
         
         public Form1()
         {
@@ -26,27 +26,27 @@ namespace MainForm
            
             //Configure Form...
             linqPerformanceManager.OnStatusProgress += LinqPerformanceManager_OnStatusProgress;
-            delegateStatusBar = new Action<int,int, ulong>(ShowLoadInformation);
+            delegateStatusBar = new Action<int,int, int>(ShowLoadInformation);
 
             this.comboParallelModes.Items.AddRange(Enum.GetNames(typeof(ParallelExecutionMode)));
             this.comboTaskCreationOpt.Items.AddRange(Enum.GetNames(typeof(TaskCreationOptions)));
 
-            this.numberOfThreadInput.Maximum = LinqPerformanceTester.MAX_THREAD_POOL;
+            this.numberOfThreadInput.Maximum = LinqPerformanceManager.MAX_THREAD_POOL;
         }
      
-        private void LinqPerformanceManager_OnStatusProgress(int threadNumber, int threadID, ulong itemsProcessed)
+        private void LinqPerformanceManager_OnStatusProgress(int threadNumber, int threadID, int itemsProcessed)
         {   
             object result = Invoke(delegateStatusBar,new object[] { threadNumber, threadID, itemsProcessed } );
         }            
 
-        private void ShowLoadInformation(int threadNumber, int threadID, ulong dataLoaded)
+        private void ShowLoadInformation(int threadNumber, int threadID, int dataLoaded)
         { 
             threadInformationDataLoaded[new ThreadKey(threadNumber,threadID)] = dataLoaded;
 
             StringBuilder textInformation = new StringBuilder();
             textInformation.AppendLine("Generating complex objects...");
 
-            foreach (KeyValuePair<ThreadKey, ulong> kvp in threadInformationDataLoaded.OrderBy(x => x.Key.ThreadNumber))
+            foreach (KeyValuePair<ThreadKey, int> kvp in threadInformationDataLoaded.OrderBy(x => x.Key.ThreadNumber))
                 textInformation.AppendLine($"Thread #{kvp.Key.ThreadNumber}:(ID {kvp.Key.ThreadID}): {kvp.Value} items processed");
 
             TextStatusProgress.Text = textInformation.ToString();
@@ -98,7 +98,7 @@ namespace MainForm
 
         private void CheckInputLoadDataParameters()
         {  
-            if (!UInt64.TryParse(inputNumberValues.Value.ToString(), out elementsForLoad))
+            if (!Int32.TryParse(inputNumberValues.Value.ToString(), out elementsForLoad))
                 throw new Exception("Invalid input parameter number of items. Must be a integer number");
 
             if (!Int32.TryParse(numberOfThreadInput.Value.ToString(),out numberOfThreads))
@@ -122,7 +122,7 @@ namespace MainForm
                 List<ComplexObject> processedItems = await linqPerformanceManager.ComplexLinqNoAsParallelAsync();
                 watch.Stop();
 
-                textNoParalellAsyn.Text = processedItems.Count + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
+                textNoParalellAsyn.Text = linqPerformanceManager.NumberOfElementProcessed() + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
 
             }
             catch (Exception exception)
@@ -153,7 +153,7 @@ namespace MainForm
                 List<ComplexObject> processedItems = await linqPerformanceManager.ComplexLinqAsParallelAsync(parallelExecutionMode, degreeParalelism);
                 watch.Stop();
 
-                textParallelAsym.Text = processedItems.Count + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
+                textParallelAsym.Text = linqPerformanceManager.NumberOfElementProcessed() + " items processed in " + watch.ElapsedMilliseconds.ToString() + "ms";
             }
             catch (Exception exception)
             {
@@ -230,6 +230,11 @@ namespace MainForm
             {
                 return ThreadNumber.ToString() + ThreadID.ToString();
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
     }
 }
