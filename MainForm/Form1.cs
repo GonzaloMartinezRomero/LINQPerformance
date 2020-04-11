@@ -177,10 +177,13 @@ namespace MainForm
 
             textParallelAsym.Clear();
             ButtonNoParallelLinq.Enabled = false;
+            ButtonParalellLinq.Enabled = false;
 
             comboTaskCreationOpt.Enabled = true;
 
             TextStatusProgress.Clear();
+
+            this.linqPerformanceManager.ClearLoadedData();
         }
 
         private string BuildTraceException(Exception exception)
@@ -236,5 +239,6 @@ namespace MainForm
         {
             Application.Exit();
         }
+
     }
 }

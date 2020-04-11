@@ -13,7 +13,7 @@ namespace LinqParallelPerformance.Manager
     public class LinqPerformanceManager
     {
         public const uint MAX_THREAD_POOL = 8;
-        public const int REFRESH_FRECUENCY = 30;
+        public const int REFRESH_FRECUENCY = 20000;
 
         public event EventHandler OnDataLoaded;
         public delegate void StatusProgress(int threadNumber, int threadID, int itemsProcessed);
@@ -35,28 +35,20 @@ namespace LinqParallelPerformance.Manager
 
             List<Task> taskList = new List<Task>();
             int batchSize = dataSize / numberOfThreads;
-
-            int ratioFrecuency = batchSize / REFRESH_FRECUENCY;
-            int refreshFrecuency = (ratioFrecuency >= 1) ? ratioFrecuency : 1;
             
             for (int i = 1; i <= numberOfThreads; ++i)
             {
                 taskList.Add(Task.Factory.StartNew(()=>
                 {
-                    int numberOfThread = GetThreadNumber();
-                    int currentAmountItems = refreshFrecuency;
+                    int numberOfThread = GetThreadNumber();                     
                     ComplexObjectBuilder complexObjectBuilder = new ComplexObjectBuilder();
-
 
                     for (int itemsProcessed = 1; itemsProcessed <= batchSize; ++itemsProcessed)
                     {   
                         //Notify the numbers of items processed
-                        if (OnStatusProgress != null && (itemsProcessed == currentAmountItems))
-                        { 
-                            NotifyUtilities.Notify(OnStatusProgress, numberOfThread, Thread.CurrentThread.ManagedThreadId, itemsProcessed);                          
-                            currentAmountItems += refreshFrecuency;                          
-                        }
-
+                        if (OnStatusProgress != null && (itemsProcessed % REFRESH_FRECUENCY == 0 || itemsProcessed == batchSize))
+                             NotifyUtilities.Notify(OnStatusProgress, numberOfThread, Thread.CurrentThread.ManagedThreadId, itemsProcessed);                          
+                     
                         //Add generated items to collection
                         concurrentListCollectionObject.Add(complexObjectBuilder.GenerateRandomDefaultModel());
                     }

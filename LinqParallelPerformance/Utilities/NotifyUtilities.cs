@@ -30,7 +30,7 @@ namespace LinqParallelPerformance.Utilities
         }
 
         private void StartToNotify()
-        {
+        {  
             while(!threadsRequestNotify.IsEmpty)
             {
                 if(threadsRequestNotify.TryDequeue(out NotifyDTO notifyDTO))
