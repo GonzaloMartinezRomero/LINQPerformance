@@ -74,7 +74,7 @@
             // ButtonParalellLinq
             // 
             this.ButtonParalellLinq.Enabled = false;
-            this.ButtonParalellLinq.Location = new System.Drawing.Point(9, 49);
+            this.ButtonParalellLinq.Location = new System.Drawing.Point(8, 60);
             this.ButtonParalellLinq.Margin = new System.Windows.Forms.Padding(2);
             this.ButtonParalellLinq.Name = "ButtonParalellLinq";
             this.ButtonParalellLinq.Size = new System.Drawing.Size(98, 36);
@@ -85,7 +85,7 @@
             // 
             // textParallelAsym
             // 
-            this.textParallelAsym.Location = new System.Drawing.Point(121, 49);
+            this.textParallelAsym.Location = new System.Drawing.Point(120, 60);
             this.textParallelAsym.Margin = new System.Windows.Forms.Padding(2);
             this.textParallelAsym.Multiline = true;
             this.textParallelAsym.Name = "textParallelAsym";
@@ -252,7 +252,7 @@
             // 
             // numericDegreeOfParalelism
             // 
-            this.numericDegreeOfParalelism.Location = new System.Drawing.Point(107, 18);
+            this.numericDegreeOfParalelism.Location = new System.Drawing.Point(107, 25);
             this.numericDegreeOfParalelism.Margin = new System.Windows.Forms.Padding(2);
             this.numericDegreeOfParalelism.Maximum = new decimal(new int[] {
             10,
@@ -276,7 +276,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(11, 21);
+            this.label4.Location = new System.Drawing.Point(11, 28);
             this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(92, 13);
@@ -286,7 +286,7 @@
             // comboParallelModes
             // 
             this.comboParallelModes.FormattingEnabled = true;
-            this.comboParallelModes.Location = new System.Drawing.Point(273, 19);
+            this.comboParallelModes.Location = new System.Drawing.Point(273, 26);
             this.comboParallelModes.Name = "comboParallelModes";
             this.comboParallelModes.Size = new System.Drawing.Size(132, 21);
             this.comboParallelModes.TabIndex = 19;
@@ -294,7 +294,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(169, 21);
+            this.label5.Location = new System.Drawing.Point(169, 28);
             this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(99, 13);
@@ -311,7 +311,7 @@
             this.groupBox3.Controls.Add(this.comboParallelModes);
             this.groupBox3.Location = new System.Drawing.Point(514, 10);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(416, 99);
+            this.groupBox3.Size = new System.Drawing.Size(416, 111);
             this.groupBox3.TabIndex = 11;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Parallel LINQ Query";
@@ -320,9 +320,9 @@
             // 
             this.groupBox2.Controls.Add(this.ButtonNoParallelLinq);
             this.groupBox2.Controls.Add(this.textNoParalellAsyn);
-            this.groupBox2.Location = new System.Drawing.Point(513, 115);
+            this.groupBox2.Location = new System.Drawing.Point(514, 128);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(417, 74);
+            this.groupBox2.Size = new System.Drawing.Size(416, 74);
             this.groupBox2.TabIndex = 12;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "LINQ NO Parallel Query";
