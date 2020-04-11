@@ -1,6 +1,6 @@
 # LINQPerformance 
-Proyect for test Linq performance executing query among large data set
-For to do the test,has been used technologies like PLinq and Linq
+* Proyect for test Linq performance executing query among large data set
+* For to do the test,has been used technologies like PLinq and Linq
 
 ## v1.0
 * Multithread data loading
